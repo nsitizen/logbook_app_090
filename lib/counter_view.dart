@@ -15,23 +15,16 @@ class _CounterViewState extends State<CounterView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("LogBook : SRP Version")),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(16),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text("Total Hitungan"),
-            const SizedBox(height: 8),
+            // COUNTER
             Text('${_controller.value}', style: const TextStyle(fontSize: 40)),
 
-            const SizedBox(height: 30),
+            const SizedBox(height: 10),
+            Text("Step: ${_controller.step}"),
 
-            // STEP DISPLAY
-            Text(
-              "Step: ${_controller.step}",
-              style: const TextStyle(fontSize: 18),
-            ),
-
-            // SLIDER STEP
             Slider(
               value: _controller.step.toDouble(),
               min: 1,
@@ -45,9 +38,6 @@ class _CounterViewState extends State<CounterView> {
               },
             ),
 
-            const SizedBox(height: 20),
-
-            // BUTTONS
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -56,13 +46,44 @@ class _CounterViewState extends State<CounterView> {
                   onPressed: () => setState(() => _controller.decrement()),
                   child: const Icon(Icons.remove),
                 ),
-                const SizedBox(width: 20),
+                const SizedBox(width: 16),
                 FloatingActionButton(
                   heroTag: 'inc',
                   onPressed: () => setState(() => _controller.increment()),
                   child: const Icon(Icons.add),
                 ),
+                const SizedBox(width: 16),
+                FloatingActionButton(
+                  heroTag: 'reset',
+                  onPressed: () => setState(() => _controller.reset()),
+                  child: const Icon(Icons.refresh),
+                ),
               ],
+            ),
+
+            const SizedBox(height: 20),
+
+            // HISTORY
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "Riwayat Aktivitas (5 Terakhir)",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            Expanded(
+              child: ListView.builder(
+                itemCount: _controller.history.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    leading: const Icon(Icons.history),
+                    title: Text(_controller.history[index]),
+                  );
+                },
+              ),
             ),
           ],
         ),
