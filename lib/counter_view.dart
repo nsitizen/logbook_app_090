@@ -11,10 +11,58 @@ class CounterView extends StatefulWidget {
 class _CounterViewState extends State<CounterView> {
   final CounterController _controller = CounterController();
 
+  Color _getHistoryColor(String text) {
+    if (text.contains("Menambah")) {
+      return Colors.green;
+    } else if (text.contains("Mengurangi")) {
+      return Colors.red;
+    } else if (text.contains("Reset")) {
+      return Colors.grey;
+    }
+    return Colors.black;
+  }
+
+  void _showResetDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Konfirmasi Reset"),
+        content: const Text(
+          "Apakah kamu yakin ingin mereset nilai counter?\nRiwayat tetap tercatat.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Batal"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                _controller.reset();
+              });
+              Navigator.pop(context);
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Counter berhasil di-reset"),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+            child: const Text("Reset"),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("LogBook : SRP Version")),
+      appBar: AppBar(
+        backgroundColor: Colors.deepPurpleAccent,
+        title: const Text("LogBook Counter"),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -43,19 +91,22 @@ class _CounterViewState extends State<CounterView> {
               children: [
                 FloatingActionButton(
                   heroTag: 'dec',
+                  backgroundColor: Colors.red,
                   onPressed: () => setState(() => _controller.decrement()),
                   child: const Icon(Icons.remove),
                 ),
                 const SizedBox(width: 16),
                 FloatingActionButton(
                   heroTag: 'inc',
+                  backgroundColor: Colors.green,
                   onPressed: () => setState(() => _controller.increment()),
                   child: const Icon(Icons.add),
                 ),
                 const SizedBox(width: 16),
                 FloatingActionButton(
                   heroTag: 'reset',
-                  onPressed: () => setState(() => _controller.reset()),
+                  backgroundColor: Colors.grey,
+                  onPressed: () => _showResetDialog(),
                   child: const Icon(Icons.refresh),
                 ),
               ],
@@ -79,8 +130,16 @@ class _CounterViewState extends State<CounterView> {
                 itemCount: _controller.history.length,
                 itemBuilder: (context, index) {
                   return ListTile(
-                    leading: const Icon(Icons.history),
-                    title: Text(_controller.history[index]),
+                    leading: Icon(
+                      Icons.history,
+                      color: _getHistoryColor(_controller.history[index]),
+                    ),
+                    title: Text(
+                      _controller.history[index],
+                      style: TextStyle(
+                        color: _getHistoryColor(_controller.history[index]),
+                      ),
+                    ),
                   );
                 },
               ),
