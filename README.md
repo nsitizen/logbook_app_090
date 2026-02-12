@@ -1,16 +1,19 @@
-# logbook_app_090
+## Refleksi Penerapan Single Responsibility Principle (SRP)
 
-A new Flutter project.
+Penerapan prinsip Single Responsibility Principle (SRP) sangat membantu saya
+saat menambahkan fitur History Logger pada aplikasi Counter ini.
 
-## Getting Started
+Dengan memisahkan tanggung jawab antara Controller dan View, seluruh logika
+pencatatan riwayat aktivitas (seperti menambah, mengurangi, dan reset nilai)
+dapat difokuskan sepenuhnya di dalam CounterController. Hal ini membuat proses
+pengembangan fitur History Logger menjadi lebih terstruktur dan mudah dikelola.
 
-This project is a starting point for a Flutter application.
+Saat fitur riwayat ditambahkan, saya tidak perlu mengubah logika tampilan secara
+berlebihan, karena View hanya bertugas menampilkan data yang sudah disediakan
+oleh Controller. Selain itu, manipulasi struktur data List untuk membatasi hanya
+5 aktivitas terakhir juga dapat dilakukan secara terpusat tanpa mempengaruhi
+bagian UI.
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Dengan SRP, kode menjadi lebih mudah dipahami, diuji, dan dikembangkan kembali
+jika di masa depan ingin menambahkan fitur seperti undo/redo atau penyimpanan
+riwayat ke database.
