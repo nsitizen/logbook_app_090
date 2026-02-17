@@ -15,14 +15,27 @@ class _CounterViewState extends State<CounterView> {
   final CounterController _controller = CounterController();
 
   Color _getHistoryColor(String text) {
-    if (text.contains("Menambah")) {
+    final lowerText = text.toLowerCase();
+
+    if (lowerText.contains("menambah")) {
       return Colors.green;
-    } else if (text.contains("Mengurangi")) {
+    } else if (lowerText.contains("mengurangi")) {
       return Colors.red;
-    } else if (text.contains("Reset")) {
+    } else if (lowerText.contains("reset")) {
       return Colors.grey;
     }
     return Colors.black;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    await _controller.loadData(widget.username);
+    setState(() {});
   }
 
   void _showResetDialog() {
@@ -39,10 +52,10 @@ class _CounterViewState extends State<CounterView> {
             child: const Text("Batal"),
           ),
           ElevatedButton(
-            onPressed: () {
-              setState(() {
-                _controller.reset();
-              });
+            onPressed: () async {
+              await _controller.reset(widget.username);
+
+              setState(() {});
               Navigator.pop(context);
 
               ScaffoldMessenger.of(context).showSnackBar(
@@ -160,14 +173,20 @@ class _CounterViewState extends State<CounterView> {
                 FloatingActionButton(
                   heroTag: 'dec',
                   backgroundColor: Colors.red,
-                  onPressed: () => setState(() => _controller.decrement()),
+                  onPressed: () async {
+                    await _controller.decrement(widget.username);
+                    setState(() {});
+                  },
                   child: const Icon(Icons.remove),
                 ),
                 const SizedBox(width: 16),
                 FloatingActionButton(
                   heroTag: 'inc',
                   backgroundColor: Colors.green,
-                  onPressed: () => setState(() => _controller.increment()),
+                  onPressed: () async {
+                    await _controller.increment(widget.username);
+                    setState(() {});
+                  },
                   child: const Icon(Icons.add),
                 ),
                 const SizedBox(width: 16),
