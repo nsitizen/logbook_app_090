@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:logbook_app_090/features/auth/login_controller.dart';
 // Import View dari fitur lain (Logbook) untuk navigasi
 import 'package:logbook_app_090/features/logbook/counter_view.dart';
+import 'dart:async';
+
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -12,14 +14,25 @@ class LoginView extends StatefulWidget {
 }
 
 class _LoginViewState extends State<LoginView> {
+  bool _obscurePassword = true;
+  bool _isButtonDisabled = false;
+  int _secondsRemaining = 10;
   // Inisialisasi Otak dan Controller Input
   final LoginController _controller = LoginController();
   final TextEditingController _userController = TextEditingController();
   final TextEditingController _passController = TextEditingController();
 
   void _handleLogin() {
-    String user = _userController.text;
-    String pass = _passController.text;
+    String user = _userController.text.trim();
+    String pass = _passController.text.trim();
+
+    // VALIDASI FIELD KOSONG
+    if (user.isEmpty || pass.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Username dan Password tidak boleh kosong")),
+      );
+      return;
+    }
 
     bool isSuccess = _controller.login(user, pass);
 
@@ -27,15 +40,48 @@ class _LoginViewState extends State<LoginView> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          // Di sini kita kirimkan variabel 'user' ke parameter 'username' di CounterView
           builder: (context) => CounterView(username: user),
         ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Login Gagal! Gunakan admin/123")),
-      );
+      if (_controller.isLocked) {
+        _startLockTimer();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Terlalu banyak percobaan! Tunggu 10 detik."),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              "Login gagal! Sisa percobaan: ${3 - _controller.failedAttempts}",
+            ),
+          ),
+        );
+      }
     }
+  }
+
+  void _startLockTimer() {
+    setState(() {
+      _isButtonDisabled = true;
+      _secondsRemaining = 10;
+    });
+
+    Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        _secondsRemaining--;
+      });
+
+      if (_secondsRemaining == 0) {
+        timer.cancel();
+        setState(() {
+          _isButtonDisabled = false;
+          _controller.resetAttempts();
+        });
+      }
+    });
   }
 
   @override
@@ -52,11 +98,28 @@ class _LoginViewState extends State<LoginView> {
             ),
             TextField(
               controller: _passController,
-              obscureText: true, // Menyembunyikan teks password
-              decoration: const InputDecoration(labelText: "Password"),
+              obscureText: _obscurePassword,
+              decoration: InputDecoration(
+                labelText: "Password",
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscurePassword = !_obscurePassword;
+                    });
+                  },
+                ),
+              ),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(onPressed: _handleLogin, child: const Text("Masuk")),
+            ElevatedButton(
+              onPressed: _isButtonDisabled ? null : _handleLogin,
+              child: _isButtonDisabled
+                  ? Text("Tunggu $_secondsRemaining detik")
+                  : const Text("Masuk"),
+            ),
           ],
         ),
       ),
