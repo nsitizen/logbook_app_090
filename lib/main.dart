@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'counter_view.dart';
+import 'package:logbook_app_090/features/onboarding/onboarding_view.dart';
 
 void main() {
   runApp(const MyApp());
@@ -10,10 +10,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
+      title: 'LogBook Counter',
       debugShowCheckedModeBanner: false,
-      title: 'Counter SRP',
-      home: CounterView(),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
+      ),
+      home: const OnboardingView(),
     );
   }
 }

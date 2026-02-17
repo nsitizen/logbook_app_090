@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:logbook_app_090/features/onboarding/onboarding_view.dart';
 import 'counter_controller.dart';
 
 class CounterView extends StatefulWidget {
-  const CounterView({super.key});
+  final String username;
+
+  const CounterView({super.key, required this.username});
 
   @override
   State<CounterView> createState() => _CounterViewState();
@@ -60,17 +63,79 @@ class _CounterViewState extends State<CounterView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: Text("Logbook: ${widget.username}"),
         backgroundColor: Colors.deepPurpleAccent,
-        title: const Text("LogBook Counter"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              // 1. Munculkan Dialog Konfirmasi
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text("Konfirmasi Logout"),
+                    content: const Text(
+                      "Apakah Anda yakin? Data yang belum disimpan mungkin akan hilang.",
+                    ),
+                    actions: [
+                      // Tombol Batal
+                      TextButton(
+                        onPressed: () =>
+                            Navigator.pop(context), // Menutup dialog saja
+                        child: const Text("Batal"),
+                      ),
+                      // Tombol Ya, Logout
+                      TextButton(
+                        onPressed: () {
+                          // Menutup dialog
+                          Navigator.pop(context);
+
+                          // 2. Navigasi kembali ke Onboarding (Membersihkan Stack)
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const OnboardingView(),
+                            ),
+                            (route) => false,
+                          );
+                        },
+                        child: const Text(
+                          "Ya, Keluar",
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // COUNTER
-            Text('${_controller.value}', style: const TextStyle(fontSize: 40)),
+            // Sapaan
+            Text(
+              "Selamat Datang, ${widget.username}!",
+              style: const TextStyle(fontSize: 16),
+            ),
 
             const SizedBox(height: 10),
+
+            const Text("Total Hitungan Anda:"),
+
+            // COUNTER VALUE
+            Text(
+              '${_controller.value}',
+              style: Theme.of(context).textTheme.headlineLarge,
+            ),
+
+            const SizedBox(height: 10),
+
+            // STEP INFO
             Text("Step: ${_controller.step}"),
 
             Slider(
@@ -86,6 +151,9 @@ class _CounterViewState extends State<CounterView> {
               },
             ),
 
+            const SizedBox(height: 10),
+
+            // BUTTONS
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -114,7 +182,7 @@ class _CounterViewState extends State<CounterView> {
 
             const SizedBox(height: 20),
 
-            // HISTORY
+            // HISTORY TITLE
             const Align(
               alignment: Alignment.centerLeft,
               child: Text(
@@ -125,20 +193,18 @@ class _CounterViewState extends State<CounterView> {
 
             const SizedBox(height: 8),
 
+            // HISTORY LIST
             Expanded(
               child: ListView.builder(
                 itemCount: _controller.history.length,
                 itemBuilder: (context, index) {
+                  final text = _controller.history[index];
+
                   return ListTile(
-                    leading: Icon(
-                      Icons.history,
-                      color: _getHistoryColor(_controller.history[index]),
-                    ),
+                    leading: Icon(Icons.history, color: _getHistoryColor(text)),
                     title: Text(
-                      _controller.history[index],
-                      style: TextStyle(
-                        color: _getHistoryColor(_controller.history[index]),
-                      ),
+                      text,
+                      style: TextStyle(color: _getHistoryColor(text)),
                     ),
                   );
                 },
