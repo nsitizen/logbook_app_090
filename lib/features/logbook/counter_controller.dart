@@ -1,5 +1,4 @@
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 
 class CounterController {
   int _counter = 0;
@@ -17,39 +16,26 @@ class CounterController {
     }
   }
 
-  // ===============================
   // LOAD DATA SAAT LOGIN
-  // ===============================
   Future<void> loadData(String username) async {
     final prefs = await SharedPreferences.getInstance();
 
     _counter = prefs.getInt("counter_$username") ?? 0;
 
-    final historyString = prefs.getString("history_$username");
-    if (historyString != null) {
-      final List<dynamic> decoded = jsonDecode(historyString);
-      _history.clear();
-      _history.addAll(decoded.cast<String>());
-    }
+    final savedHistory = prefs.getStringList("history_$username");
+    _history.clear();
+    _history.addAll(savedHistory ?? []);
   }
 
-  // ===============================
   // SAVE DATA
-  // ===============================
   Future<void> _saveData(String username) async {
     final prefs = await SharedPreferences.getInstance();
 
     await prefs.setInt("counter_$username", _counter);
-    await prefs.setString(
-      "history_$username",
-      jsonEncode(_history),
-    );
+    await prefs.setStringList('history_$username', _history);
   }
 
-  // ===============================
   // ACTIONS
-  // ===============================
-
   Future<void> increment(String username) async {
     _counter += _step;
     _addHistory("User $username menambah +$_step");

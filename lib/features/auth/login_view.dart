@@ -1,11 +1,8 @@
-// login_view.dart
 import 'package:flutter/material.dart';
-// Import Controller milik sendiri (masih satu folder)
 import 'package:logbook_app_090/features/auth/login_controller.dart';
-// Import View dari fitur lain (Logbook) untuk navigasi
 import 'package:logbook_app_090/features/logbook/counter_view.dart';
 import 'dart:async';
-
+import 'package:google_fonts/google_fonts.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -29,7 +26,16 @@ class _LoginViewState extends State<LoginView> {
     // VALIDASI FIELD KOSONG
     if (user.isEmpty || pass.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Username dan Password tidak boleh kosong")),
+        const SnackBar(
+          content: Text("Username dan Password tidak boleh kosong"),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(
+            top: 20,
+            left: 20,
+            right: 20,
+          ),
+        ),
       );
       return;
     }
@@ -49,13 +55,25 @@ class _LoginViewState extends State<LoginView> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Terlalu banyak percobaan! Tunggu 10 detik."),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.only(
+              top: 20,
+              left: 20,
+              right: 20,
+            ),
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              "Login gagal! Sisa percobaan: ${3 - _controller.failedAttempts}",
+            content: Text("Login gagal! Sisa percobaan: ${3 - _controller.failedAttempts}",),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.only(
+              top: 20,
+              left: 20,
+              right: 20,
             ),
           ),
         );
@@ -87,40 +105,112 @@ class _LoginViewState extends State<LoginView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Login Gatekeeper")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _userController,
-              decoration: const InputDecoration(labelText: "Username"),
-            ),
-            TextField(
-              controller: _passController,
-              obscureText: _obscurePassword,
-              decoration: InputDecoration(
-                labelText: "Password",
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscurePassword ? Icons.visibility : Icons.visibility_off,
+      backgroundColor: const Color.fromARGB(255, 243, 231, 255),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 40),
+                Text(
+                  "Login",
+                  style: GoogleFonts.poppins(
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.deepPurple.shade800,
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _obscurePassword = !_obscurePassword;
-                    });
-                  },
                 ),
-              ),
+
+                const SizedBox(height: 20),
+
+                Image.asset(
+                  "assets/images/login2.jpeg",
+                  height: 200,
+                ),
+
+                const SizedBox(height: 30),
+
+                // USERNAME FIELD
+                TextField(
+                  controller: _userController,
+                  decoration: InputDecoration(
+                    labelText: "Username",
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // PASSWORD FIELD
+                TextField(
+                  controller: _passController,
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: "Password",
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 30),
+
+                // BUTTON LOGIN
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurpleAccent,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    onPressed: _isButtonDisabled ? null : _handleLogin,
+                    child: _isButtonDisabled
+                      ? Text(
+                          "Tunggu $_secondsRemaining detik",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: const Color.fromARGB(255, 243, 231, 255), 
+                            fontWeight: FontWeight.w600,
+                          ),
+                        )
+                      : Text(
+                          "Masuk",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: const Color.fromARGB(255, 243, 231, 255), 
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                  ),
+                ),
+
+                const SizedBox(height: 40),
+              ],
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _isButtonDisabled ? null : _handleLogin,
-              child: _isButtonDisabled
-                  ? Text("Tunggu $_secondsRemaining detik")
-                  : const Text("Masuk"),
-            ),
-          ],
+          ),
         ),
       ),
     );

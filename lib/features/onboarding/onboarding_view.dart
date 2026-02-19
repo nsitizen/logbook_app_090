@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:logbook_app_090/features/auth/login_view.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class OnboardingView extends StatefulWidget {
   const OnboardingView({super.key});
@@ -9,68 +10,129 @@ class OnboardingView extends StatefulWidget {
 }
 
 class _OnboardingViewState extends State<OnboardingView> {
-  int step = 1;
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
 
-  void _nextStep() {
-    setState(() {
-      step++;
-    });
-
-    if (step > 3) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginView()),
-      );
-    }
-  }
-
-  String _getContent() {
-    switch (step) {
-      case 1:
-        return "Selamat datang di LogBook Counter!\nAplikasi untuk mencatat aktivitas hitunganmu.";
-      case 2:
-        return "Kamu bisa menambah, mengurangi,\ndan melihat riwayat aktivitas.";
-      case 3:
-        return "Yuk mulai dengan login\nuntuk menggunakan aplikasi!";
-      default:
-        return "";
-    }
-  }
+  final List<Map<String, String>> _pages = [
+    {
+      "image": "assets/images/welcome.jpeg",
+      "text": "Catat setiap aktivitas hitunganmu dengan mudah.",
+    },
+    {
+      "image": "assets/images/statistik.jpeg",
+      "text": "Lihat riwayat aktivitas dengan tampilan yang rapi.",
+    },
+    {
+      "image": "assets/images/login1.jpeg",
+      "text": "Login dan mulai gunakan LogBook Counter sekarang!",
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Onboarding"),
-        backgroundColor: Colors.deepPurpleAccent,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Center( // <-- Tambahan supaya fix di tengah layar
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center, // Tengah vertikal
-            crossAxisAlignment: CrossAxisAlignment.center, // Tengah horizontal
-            mainAxisSize: MainAxisSize.min, // Supaya tidak full tinggi
-            children: [
-              Text(
-                "Step $step / 3",
-                style: const TextStyle(fontSize: 18),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              Text(
-                _getContent(),
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16),
-              ),
-              const SizedBox(height: 40),
-              ElevatedButton(
-                onPressed: _nextStep,
-                child: const Text("Next"),
-              ),
-            ],
+      backgroundColor: const Color.fromARGB(255, 243, 231, 255),
+      body: Column(
+        children: [
+          Expanded(
+            child: PageView.builder(
+              controller: _pageController,
+              itemCount: _pages.length,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentPage = index;
+                });
+              },
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (index == 0)
+                      Text(
+                        "LogBook Counter",
+                        style: GoogleFonts.poppins(
+                          fontSize: 35,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.deepPurple.shade800,
+                        ),
+                      ),
+                      const SizedBox(height: 25),
+                      Image.asset(_pages[index]["image"]!, height: 250),
+                      const SizedBox(height: 30),
+                      Text(
+                        _pages[index]["text"]!,
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.poppins(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.deepPurple.shade700,
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
-        ),
+
+          // PAGE INDICATOR
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              _pages.length,
+              (index) => AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                width: _currentPage == index ? 12 : 8,
+                height: _currentPage == index ? 12 : 8,
+                decoration: BoxDecoration(
+                  color: _currentPage == index
+                      ? Colors.deepPurpleAccent
+                      : Colors.grey,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.deepPurpleAccent,
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
+            onPressed: () {
+              if (_currentPage == _pages.length - 1) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginView()),
+                );
+              } else {
+                _pageController.nextPage(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                );
+              }
+            },
+            child: Text(
+              _currentPage == _pages.length - 1 ? "Mulai" : "Next",
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 40),
+        ],
       ),
     );
   }

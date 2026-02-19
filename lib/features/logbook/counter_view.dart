@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:logbook_app_090/features/onboarding/onboarding_view.dart';
 import 'counter_controller.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class CounterView extends StatefulWidget {
   final String username;
@@ -25,6 +26,20 @@ class _CounterViewState extends State<CounterView> {
       return Colors.grey;
     }
     return Colors.black;
+  }
+
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+
+    if (hour >= 6 && hour < 12) {
+      return "Selamat Pagi";
+    } else if (hour >= 12 && hour < 15) {
+      return "Selamat Siang";
+    } else if (hour >= 15 && hour < 18) {
+      return "Selamat Sore";
+    } else {
+      return "Selamat Malam";
+    }
   }
 
   @override
@@ -75,14 +90,27 @@ class _CounterViewState extends State<CounterView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 243, 231, 255),
       appBar: AppBar(
-        title: Text("Logbook: ${widget.username}"),
         backgroundColor: Colors.deepPurpleAccent,
+        title: Text(
+          "Logbook: ${widget.username}",
+          style: GoogleFonts.poppins(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: const Color.fromARGB(255, 243, 231, 255),
+          ),
+        ),
+        iconTheme: IconThemeData(
+          color: const Color.fromARGB(255, 243, 231, 255),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: Icon(
+              Icons.logout,
+              color: const Color.fromARGB(255, 243, 231, 255),
+            ),
             onPressed: () {
-              // 1. Munculkan Dialog Konfirmasi
               showDialog(
                 context: context,
                 builder: (BuildContext context) {
@@ -92,19 +120,13 @@ class _CounterViewState extends State<CounterView> {
                       "Apakah Anda yakin? Data yang belum disimpan mungkin akan hilang.",
                     ),
                     actions: [
-                      // Tombol Batal
                       TextButton(
-                        onPressed: () =>
-                            Navigator.pop(context), // Menutup dialog saja
+                        onPressed: () => Navigator.pop(context),
                         child: const Text("Batal"),
                       ),
-                      // Tombol Ya, Logout
                       TextButton(
                         onPressed: () {
-                          // Menutup dialog
                           Navigator.pop(context);
-
-                          // 2. Navigasi kembali ke Onboarding (Membersihkan Stack)
                           Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
@@ -131,9 +153,19 @@ class _CounterViewState extends State<CounterView> {
         child: Column(
           children: [
             // Sapaan
-            Text(
-              "Selamat Datang, ${widget.username}!",
-              style: const TextStyle(fontSize: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.deepPurpleAccent.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                "${_getGreeting()}, ${widget.username} 👋",
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
 
             const SizedBox(height: 10),
