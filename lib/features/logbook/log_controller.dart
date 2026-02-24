@@ -21,7 +21,7 @@ class LogController {
     }
   }
 
-  // ADD
+  // CREATE
   Future<void> addLog(String username, String title, String desc) async {
     final newLog = LogModel(
       title: title,
