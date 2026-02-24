@@ -7,22 +7,25 @@ class LogController {
   final ValueNotifier<List<LogModel>> logsNotifier =
       ValueNotifier<List<LogModel>>([]);
 
-  // LOAD DATA PER USER
+  // LOAD DATA PER USER 
   Future<void> loadFromDisk(String username) async {
     final prefs = await SharedPreferences.getInstance();
-    final String? data = prefs.getString('user_logs_$username');
+    final String? jsonString =
+        prefs.getString('user_logs_$username');
 
-    if (data != null) {
-      final List decoded = jsonDecode(data);
+    if (jsonString != null) {
+      final List decodedList = jsonDecode(jsonString);
+
       logsNotifier.value =
-          decoded.map((e) => LogModel.fromMap(e)).toList();
+          decodedList.map((e) => LogModel.fromMap(e)).toList();
     } else {
       logsNotifier.value = [];
     }
   }
 
   // CREATE
-  Future<void> addLog(String username, String title, String desc) async {
+  Future<void> addLog(
+      String username, String title, String desc) async {
     final newLog = LogModel(
       title: title,
       description: desc,
@@ -30,6 +33,7 @@ class LogController {
     );
 
     logsNotifier.value = [...logsNotifier.value, newLog];
+
     await saveToDisk(username);
   }
 
@@ -45,6 +49,7 @@ class LogController {
     );
 
     logsNotifier.value = updatedList;
+
     await saveToDisk(username);
   }
 
@@ -54,17 +59,19 @@ class LogController {
     updatedList.removeAt(index);
 
     logsNotifier.value = updatedList;
+
     await saveToDisk(username);
   }
 
-  // SAVE PER USER
+  // SERIALIZATION + SAVE
   Future<void> saveToDisk(String username) async {
     final prefs = await SharedPreferences.getInstance();
 
-    final String encodedData = jsonEncode(
-      logsNotifier.value.map((e) => e.toMap()).toList(),
-    );
+    final listMap =
+        logsNotifier.value.map((log) => log.toMap()).toList();
 
-    await prefs.setString('user_logs_$username', encodedData);
+    final jsonString = jsonEncode(listMap);
+
+    await prefs.setString('user_logs_$username', jsonString);
   }
 }
