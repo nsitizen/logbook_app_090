@@ -36,23 +36,24 @@ class LogController {
   // UPDATE
   Future<void> updateLog(
       String username, int index, String title, String desc) async {
-    final currentLogs = List<LogModel>.from(logsNotifier.value);
+    final updatedList = List<LogModel>.from(logsNotifier.value);
 
-    currentLogs[index] = LogModel(
+    updatedList[index] = LogModel(
       title: title,
       description: desc,
       date: DateTime.now().toString(),
     );
 
-    logsNotifier.value = currentLogs;
+    logsNotifier.value = updatedList;
     await saveToDisk(username);
   }
 
   // DELETE
   Future<void> removeLog(String username, int index) async {
-    final currentLogs = List<LogModel>.from(logsNotifier.value);
-    currentLogs.removeAt(index);
-    logsNotifier.value = currentLogs;
+    final updatedList = List<LogModel>.from(logsNotifier.value);
+    updatedList.removeAt(index);
+
+    logsNotifier.value = updatedList;
     await saveToDisk(username);
   }
 

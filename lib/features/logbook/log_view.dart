@@ -24,22 +24,29 @@ class _LogViewState extends State<LogView> {
     _controller.loadFromDisk(widget.username);
   }
 
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _contentController.dispose();
+    super.dispose();
+  }
+
   void _showAddLogDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Tambah Catatan Baru"),
+      builder: (_) => AlertDialog(
+        title: const Text("Tambah Catatan"),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: _titleController,
-              decoration: const InputDecoration(hintText: "Judul Catatan"),
+              decoration: const InputDecoration(hintText: "Judul"),
             ),
             const SizedBox(height: 10),
             TextField(
               controller: _contentController,
-              decoration: const InputDecoration(hintText: "Isi Deskripsi"),
+              decoration: const InputDecoration(hintText: "Deskripsi"),
             ),
           ],
         ),
@@ -55,9 +62,7 @@ class _LogViewState extends State<LogView> {
           ElevatedButton(
             onPressed: () async {
               if (_titleController.text.isEmpty ||
-                  _contentController.text.isEmpty) {
-                return;
-              }
+                  _contentController.text.isEmpty) return;
 
               await _controller.addLog(
                 widget.username,
@@ -82,7 +87,7 @@ class _LogViewState extends State<LogView> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (_) => AlertDialog(
         title: const Text("Edit Catatan"),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -94,11 +99,7 @@ class _LogViewState extends State<LogView> {
         ),
         actions: [
           TextButton(
-            onPressed: () {
-              _titleController.clear();
-              _contentController.clear();
-              Navigator.pop(context);
-            },
+            onPressed: () => Navigator.pop(context),
             child: const Text("Batal"),
           ),
           ElevatedButton(
@@ -174,53 +175,58 @@ class _LogViewState extends State<LogView> {
       ),
       body: ValueListenableBuilder<List<LogModel>>(
         valueListenable: _controller.logsNotifier,
-        builder: (context, currentLogs, child) {
-          if (currentLogs.isEmpty) {
+        builder: (context, logs, _) {
+          if (logs.isEmpty) {
             return const Center(
-              child: Text("Belum ada catatan.", style: TextStyle(fontSize: 16)),
+              child: Text("Belum ada catatan."),
             );
           }
 
           return ListView.builder(
-            itemCount: currentLogs.length,
+            itemCount: logs.length,
             itemBuilder: (context, index) {
-              final log = currentLogs[index];
+              final log = logs[index];
 
               return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                margin:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                    borderRadius: BorderRadius.circular(12)),
                 child: ListTile(
-                  leading: const Icon(Icons.note, color: Colors.deepPurple),
+                  leading:
+                      const Icon(Icons.note, color: Colors.deepPurple),
                   title: Text(
                     log.title,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold),
                   ),
                   subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
                     children: [
                       Text(log.description),
                       const SizedBox(height: 4),
                       Text(
                         log.date,
                         style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
+                            fontSize: 12, color: Colors.grey),
                       ),
                     ],
                   ),
                   trailing: Wrap(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.edit, color: Colors.blue),
-                        onPressed: () => _showEditLogDialog(index, log),
+                        icon: const Icon(Icons.edit,
+                            color: Colors.blue),
+                        onPressed: () =>
+                            _showEditLogDialog(index, log),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
+                        icon: const Icon(Icons.delete,
+                            color: Colors.red),
                         onPressed: () =>
-                            _controller.removeLog(widget.username, index),
+                            _controller.removeLog(
+                                widget.username, index),
                       ),
                     ],
                   ),
