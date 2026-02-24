@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:logbook_app_090/features/auth/login_controller.dart';
-import 'package:logbook_app_090/features/logbook/counter_view.dart';
+import 'package:logbook_app_090/features/logbook/log_view.dart';
 import 'dart:async';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -46,7 +46,7 @@ class _LoginViewState extends State<LoginView> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => CounterView(username: user),
+          builder: (context) => LogView(username: user),
         ),
       );
     } else {
