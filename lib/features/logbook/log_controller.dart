@@ -7,7 +7,10 @@ class LogController {
   final ValueNotifier<List<LogModel>> logsNotifier =
       ValueNotifier<List<LogModel>>([]);
 
-  // LOAD DATA PER USER 
+  final ValueNotifier<List<LogModel>> filteredLogs =
+      ValueNotifier<List<LogModel>>([]);
+
+  // LOAD
   Future<void> loadFromDisk(String username) async {
     final prefs = await SharedPreferences.getInstance();
     final String? jsonString =
@@ -21,34 +24,52 @@ class LogController {
     } else {
       logsNotifier.value = [];
     }
+
+    filteredLogs.value = logsNotifier.value;
+  }
+
+  // SEARCH
+  void searchLog(String query) {
+    if (query.isEmpty) {
+      filteredLogs.value = logsNotifier.value;
+    } else {
+      filteredLogs.value = logsNotifier.value
+          .where((log) =>
+              log.title.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    }
   }
 
   // CREATE
-  Future<void> addLog(
-      String username, String title, String desc) async {
+  Future<void> addLog(String username, String title,
+      String desc, String category) async {
     final newLog = LogModel(
       title: title,
       description: desc,
       date: DateTime.now().toString(),
+      category: category,
     );
 
     logsNotifier.value = [...logsNotifier.value, newLog];
+    filteredLogs.value = logsNotifier.value;
 
     await saveToDisk(username);
   }
 
   // UPDATE
-  Future<void> updateLog(
-      String username, int index, String title, String desc) async {
+  Future<void> updateLog(String username, int index,
+      String title, String desc, String category) async {
     final updatedList = List<LogModel>.from(logsNotifier.value);
 
     updatedList[index] = LogModel(
       title: title,
       description: desc,
       date: DateTime.now().toString(),
+      category: category,
     );
 
     logsNotifier.value = updatedList;
+    filteredLogs.value = logsNotifier.value;
 
     await saveToDisk(username);
   }
@@ -59,11 +80,12 @@ class LogController {
     updatedList.removeAt(index);
 
     logsNotifier.value = updatedList;
+    filteredLogs.value = logsNotifier.value;
 
     await saveToDisk(username);
   }
 
-  // SERIALIZATION + SAVE
+  // SAVE
   Future<void> saveToDisk(String username) async {
     final prefs = await SharedPreferences.getInstance();
 
