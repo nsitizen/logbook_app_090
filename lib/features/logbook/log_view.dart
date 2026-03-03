@@ -3,6 +3,8 @@ import 'package:logbook_app_090/features/onboarding/onboarding_view.dart';
 import 'log_controller.dart';
 import 'models/log_model.dart';
 import 'package:intl/intl.dart';
+import '../../services/mongo_service.dart';
+import '../../helpers/log_helper.dart';
 
 class LogView extends StatefulWidget {
   final String username;
@@ -15,6 +17,7 @@ class LogView extends StatefulWidget {
 
 class _LogViewState extends State<LogView> {
   final LogController _controller = LogController();
+  bool _isLoading = false;
 
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
@@ -31,7 +34,51 @@ class _LogViewState extends State<LogView> {
   @override
   void initState() {
     super.initState();
-    _controller.loadFromDisk(widget.username);
+    Future.microtask(() => _initDatabase());
+  }
+
+  Future<void> _initDatabase() async {
+    setState(() => _isLoading = true);
+
+    try {
+      await LogHelper.writeLog(
+        "UI: Memulai koneksi MongoDB...",
+        source: "log_view.dart",
+      );
+
+      await MongoService().connect().timeout(
+        const Duration(seconds: 15),
+        onTimeout: () =>
+            throw Exception("Koneksi Cloud Timeout. Periksa IP Whitelist."),
+      );
+
+      await LogHelper.writeLog(
+        "UI: MongoDB CONNECTED",
+        source: "log_view.dart",
+      );
+
+      await _controller.loadFromCloud();
+
+    } catch (e) {
+      await LogHelper.writeLog(
+        "UI ERROR: $e",
+        source: "log_view.dart",
+        level: 1,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Masalah koneksi: $e"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -65,8 +112,12 @@ class _LogViewState extends State<LogView> {
   }
 
   String _formatDate(String dateString) {
-    final dateTime = DateTime.parse(dateString);
-    return DateFormat('dd MMM yyyy, HH:mm').format(dateTime);
+    try {
+      final dateTime = DateTime.parse(dateString);
+      return DateFormat('dd MMM yyyy, HH:mm').format(dateTime);
+    } catch (e) {
+      return dateString;
+    }
   }
 
   void _showAddLogDialog() {
@@ -120,7 +171,6 @@ class _LogViewState extends State<LogView> {
                   _contentController.text.isEmpty) return;
 
               await _controller.addLog(
-                widget.username,
                 _titleController.text,
                 _contentController.text,
                 _selectedCategory,
@@ -178,12 +228,11 @@ class _LogViewState extends State<LogView> {
           ),
           ElevatedButton(
             onPressed: () async {
-              await _controller.updateLog(
-                widget.username,
-                realIndex,
-                _titleController.text,
-                _contentController.text,
-                _selectedCategory,
+               _controller.updateLog(
+                  log,
+                  _titleController.text,
+                  _contentController.text,
+                  _selectedCategory,
               );
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -313,7 +362,18 @@ class _LogViewState extends State<LogView> {
             ),
           ),
           Expanded(
-            child: ValueListenableBuilder<List<LogModel>>(
+            child: _isLoading
+              ? const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text("Menghubungkan ke MongoDB Atlas..."),
+                    ],
+                  ),
+                )
+              : ValueListenableBuilder<List<LogModel>>(
               valueListenable:
                   _controller.filteredLogs,
               builder: (context, logs, _) {
@@ -354,7 +414,7 @@ class _LogViewState extends State<LogView> {
                       duration: const Duration(milliseconds: 300),
                       curve: Curves.easeInOut,
                       child: Dismissible(
-                        key: Key(log.date),
+                        key: Key(log.id?.toHexString() ?? log.date),
                         direction:
                             DismissDirection.endToStart,
                         background: Container(
@@ -370,10 +430,13 @@ class _LogViewState extends State<LogView> {
                         ),
                         onDismissed:
                             (direction) async {
-                          await _controller
-                              .removeLog(
-                                  widget.username,
-                                  realIndex);
+                          await _controller.removeLog(log);
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Catatan dihapus"),
+                            ),
+                          );
 
                           ScaffoldMessenger.of(context)
                               .showSnackBar(
@@ -468,7 +531,7 @@ class _LogViewState extends State<LogView> {
                                             onPressed: () async {
                                               Navigator.pop(context);
 
-                                              await _controller.removeLog(widget.username, index);
+                                              await _controller.removeLog(log);
 
                                               ScaffoldMessenger.of(context).showSnackBar(
                                                 const SnackBar(
