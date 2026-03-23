@@ -63,27 +63,30 @@ class MongoService {
     }
   }
 
-  /// READ
-  Future<List<LogModel>> getLogs() async {
+  /// READ: Mengambil data dari Cloud
+  Future<List<LogModel>> getLogs(String teamId) async {
     try {
       final collection = await _getSafeCollection();
 
       await LogHelper.writeLog(
-        "INFO: Fetching data from Cloud...",
+        "INFO: Fetching data for Team: $teamId",
         source: _source,
         level: 3,
       );
 
-      final List<Map<String, dynamic>> data =
-          await collection.find().toList();
+      final List<Map<String, dynamic>> data = await collection
+          .find(where.eq('teamId', teamId))
+          .toList();
 
       return data.map((json) => LogModel.fromMap(json)).toList();
+
     } catch (e) {
       await LogHelper.writeLog(
         "ERROR: Fetch Failed - $e",
         source: _source,
         level: 1,
       );
+
       return [];
     }
   }
@@ -119,7 +122,7 @@ class MongoService {
       }
 
       await collection.replaceOne(
-        where.id(log.id!),
+        where.id(ObjectId.fromHexString(log.id!)),
         log.toMap(),
       );
 
