@@ -15,17 +15,24 @@ class LogView extends StatefulWidget {
 }
 
 class _LogViewState extends State<LogView> {
+
   final LogController _controller = LogController();
-
   final TextEditingController _searchController = TextEditingController();
-
+  String _selectedCategory = "All";
+  final List<String> _categories = [
+    "All",
+    "Mechanical",
+    "Electronic",
+    "Software",
+  ];
   final String teamId = "team_001";
 
   @override
   void initState() {
     super.initState();
 
-    /// LOAD DATA (Offline First)
+    _controller.setUser(widget.username);
+    _controller.startConnectivityListener();
     _controller.loadLogs(teamId);
   }
 
@@ -39,10 +46,7 @@ class _LogViewState extends State<LogView> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => LogEditorPage(
-          log: log,
-          controller: _controller,
-        ),
+        builder: (context) => LogEditorPage(log: log, controller: _controller),
       ),
     );
   }
@@ -110,18 +114,12 @@ class _LogViewState extends State<LogView> {
         backgroundColor: Colors.deepPurpleAccent,
         title: Text(
           "Logbook: ${widget.username}",
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
         ),
         actions: [
           ValueListenableBuilder<bool>(
             valueListenable: _controller.isSyncing,
             builder: (context, syncing, _) {
-
               if (syncing) {
-
                 return const Padding(
                   padding: EdgeInsets.all(12),
                   child: SizedBox(
@@ -133,18 +131,15 @@ class _LogViewState extends State<LogView> {
                     ),
                   ),
                 );
-
               }
 
               return ValueListenableBuilder<bool>(
                 valueListenable: _controller.isOnline,
                 builder: (context, online, _) {
-
                   return Icon(
                     online ? Icons.cloud_done : Icons.cloud_off,
-                    color: online ? Colors.green : Colors.red,
+                    color: online ? Colors.green : Colors.grey,
                   );
-
                 },
               );
             },
@@ -155,8 +150,15 @@ class _LogViewState extends State<LogView> {
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: const Text("Konfirmasi Logout"),
-                  content: const Text("Apakah Anda yakin?"),
+                  title: Text(
+                    "Konfirmasi Logout",
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+
+                  content: Text(
+                    "Apakah Anda yakin?",
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
@@ -188,7 +190,6 @@ class _LogViewState extends State<LogView> {
 
       body: Column(
         children: [
-
           /// HEADER
           Container(
             width: double.infinity,
@@ -205,16 +206,19 @@ class _LogViewState extends State<LogView> {
               children: [
                 Text(
                   "Halo, ${widget.username} 👋",
-                  style: const TextStyle(
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: Colors.white,
-                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+
                 const SizedBox(height: 4),
-                const Text(
+
+                Text(
                   "Catat aktivitas harianmu hari ini ✨",
-                  style: TextStyle(color: Colors.white70),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.white70,
+                  ),
                 ),
               ],
             ),
@@ -234,65 +238,127 @@ class _LogViewState extends State<LogView> {
             ),
           ),
 
+          /// FILTER CATEGORY (HORIZONTAL CHIP)
+          SizedBox(
+            height: 50,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: _categories.length,
+              itemBuilder: (context, index) {
+                final category = _categories[index];
+                final isSelected = _selectedCategory == category;
+
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: Text(category),
+                    selected: isSelected,
+                    onSelected: (_) {
+                      setState(() {
+                        _selectedCategory = category;
+                      });
+                    },
+                    selectedColor: Colors.deepPurpleAccent,
+                    backgroundColor: Colors.white,
+                    labelStyle: TextStyle(
+                      color: isSelected ? Colors.white : Colors.black,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+
           /// LIST LOG
           Expanded(
             child: ValueListenableBuilder<List<LogModel>>(
               valueListenable: _controller.filteredLogs,
               builder: (context, logs, _) {
 
-                /// =========================
-                /// PRIVACY FILTER (TASK 5)
-                /// =========================
-
+                /// PRIVACY FILTER
                 final displayLogs = logs.where((log) {
-
                   final isOwner = log.authorId == _controller.userId;
 
-                  return isOwner || log.isPublic == true;
+                  final passPrivacy = isOwner || log.isPublic == true;
 
+                  final passCategory = _selectedCategory == "All"
+                      ? true
+                      : log.category == _selectedCategory;
+
+                  return passPrivacy && passCategory;
                 }).toList();
 
+                final isSearching = _searchController.text.isNotEmpty;
+
                 if (displayLogs.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
+                  if (isSearching) {
 
-                        Icon(
-                          Icons.auto_stories,
-                          size: 80,
-                          color: Colors.deepPurple.shade200,
-                        ),
+                    /// EMPTY SEARCH RESULT
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
 
-                        const SizedBox(height: 20),
-
-                        const Text(
-                          "Belum ada aktivitas hari ini",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                          Icon(
+                            Icons.auto_stories,
+                            size: 80,
+                            color: Colors.deepPurple.shade200,
                           ),
-                        ),
 
-                        const SizedBox(height: 8),
+                          const SizedBox(height: 20),
 
-                        const Text(
-                          "Mulai catat kemajuan proyek Anda!",
-                          style: TextStyle(
-                            color: Colors.black54,
+                          Text(
+                            "Tidak ada catatan yang anda cari.",
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
+                        ],
+                      ),
+                    );
+                  } else {
 
-                        const SizedBox(height: 20),
+                    /// NO DATA AT ALL
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
 
-                        ElevatedButton.icon(
-                          onPressed: () => _goToEditor(),
-                          icon: const Icon(Icons.add),
-                          label: const Text("Tambah Catatan"),
-                        )
-                      ],
-                    ),
-                  );
+                          Icon(
+                            Icons.auto_stories,
+                            size: 80,
+                            color: Colors.deepPurple.shade200,
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          Text(
+                            "Belum ada aktivitas hari ini",
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          Text(
+                            "Mulai catat aktivitas Anda!",
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Colors.black54,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+
+                          ElevatedButton.icon(
+                            onPressed: () => _goToEditor(),
+                            icon: const Icon(Icons.add),
+                            label: const Text("Tambah Catatan"),
+                          )
+                        ],
+                      ),
+                    );
+                  }
                 }
 
                 return RefreshIndicator(
@@ -302,11 +368,9 @@ class _LogViewState extends State<LogView> {
                   child: ListView.builder(
                     itemCount: displayLogs.length,
                     itemBuilder: (context, index) {
-
                       final log = displayLogs[index];
 
-                      final bool isOwner =
-                          log.authorId == _controller.userId;
+                      final bool isOwner = log.authorId == _controller.userId;
 
                       return Dismissible(
                         key: Key(log.id ?? log.date),
@@ -329,10 +393,12 @@ class _LogViewState extends State<LogView> {
                             builder: (context) => AlertDialog(
                               title: const Text("Hapus Catatan"),
                               content: const Text(
-                                  "Apakah Anda yakin ingin menghapus catatan ini?"),
+                                "Apakah Anda yakin ingin menghapus catatan ini?",
+                              ),
                               actions: [
                                 TextButton(
-                                  onPressed: () => Navigator.pop(context, false),
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
                                   child: const Text("Batal"),
                                 ),
                                 TextButton(
@@ -348,7 +414,6 @@ class _LogViewState extends State<LogView> {
                         },
 
                         onDismissed: (direction) async {
-
                           await _controller.removeLog(log);
 
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -370,9 +435,7 @@ class _LogViewState extends State<LogView> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
-
                           child: ListTile(
-
                             leading: Icon(
                               _getCategoryIcon(log.category),
                               color: Colors.deepPurple,
@@ -380,7 +443,9 @@ class _LogViewState extends State<LogView> {
 
                             title: Text(
                               log.title,
-                              style: const TextStyle(
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -388,67 +453,80 @@ class _LogViewState extends State<LogView> {
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-
-                                Text(log.description),
+                                /// DESCRIPTION
+                                Text(
+                                  log.description,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
 
                                 const SizedBox(height: 8),
 
-                                Row(
-                                  children: [
+                                /// CATEGORY
+                                Chip(
+                                  label: Text(
+                                    log.category,
+                                    style: Theme.of(context).textTheme.bodySmall,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  backgroundColor: Colors.white,
+                                  avatar: Icon(
+                                    _getCategoryIcon(log.category),
+                                    size: 16,
+                                  ),
+                                ),
 
-                                    Chip(
-                                      label: Text(
-                                        log.category,
-                                        style: const TextStyle(fontSize: 12),
-                                      ),
-                                      backgroundColor: Colors.white,
-                                      avatar: Icon(
-                                        _getCategoryIcon(log.category),
-                                        size: 16,
-                                      ),
-                                    ),
+                                const SizedBox(height: 4),
 
-                                    const SizedBox(width: 8),
-
-                                    Text(
-                                      _formatDate(log.date),
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.black54,
-                                      ),
-                                    ),
-                                  ],
+                                /// DATE
+                                Text(
+                                  _formatDate(log.date),
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Colors.black54,
+                                  ),
                                 ),
                               ],
                             ),
 
-                            trailing: Wrap(
-                              children: [
-
-                                /// EDIT (OWNER ONLY)
-                                if (isOwner)
-                                  IconButton(
-                                    icon: const Icon(Icons.edit, color: Colors.blue),
-                                    onPressed: () => _goToEditor(log: log),
-                                  ),
-
-                                /// DELETE (OWNER ONLY)
-                                if (isOwner)
-                                  IconButton(
-                                    icon: const Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () async {
-
-                                      await _controller.removeLog(log);
-
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text("Catatan berhasil dihapus ✅"),
+                            trailing: isOwner
+                                ? SizedBox(
+                                    width: 96,
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.edit,
+                                            color: Colors.blue,
+                                          ),
+                                          onPressed: () =>
+                                              _goToEditor(log: log),
                                         ),
-                                      );
-                                    },
-                                  ),
-                              ],
-                            ),
+
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.delete,
+                                            color: Colors.red,
+                                          ),
+                                          onPressed: () async {
+                                            await _controller.removeLog(log);
+
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                  "Catatan berhasil dihapus ✅",
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : null,
                           ),
                         ),
                       );
@@ -461,10 +539,34 @@ class _LogViewState extends State<LogView> {
         ],
       ),
 
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.deepPurpleAccent,
-        onPressed: () => _goToEditor(),
-        child: const Icon(Icons.add),
+      floatingActionButton: ValueListenableBuilder<List<LogModel>>(
+        valueListenable: _controller.filteredLogs,
+        builder: (context, logs, _) {
+          final displayLogs = logs.where((log) {
+            final isOwner = log.authorId == _controller.userId;
+
+            final passPrivacy = isOwner || log.isPublic == true;
+
+            final passCategory = _selectedCategory == "All"
+                ? true
+                : log.category == _selectedCategory;
+
+            return passPrivacy && passCategory;
+          }).toList();
+
+          final isSearching = _searchController.text.isNotEmpty;
+
+          if (displayLogs.isEmpty) {
+            return const SizedBox(); 
+          }
+
+          /// Tampilkan kalau ada data
+          return FloatingActionButton(
+            backgroundColor: Colors.deepPurpleAccent,
+            onPressed: () => _goToEditor(),
+            child: const Icon(Icons.add),
+          );
+        },
       ),
     );
   }

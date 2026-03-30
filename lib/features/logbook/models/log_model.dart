@@ -5,7 +5,6 @@ part 'log_model.g.dart';
 
 @HiveType(typeId: 0)
 class LogModel {
-
   @HiveField(0)
   final String? id;
 
@@ -19,15 +18,18 @@ class LogModel {
   final String date;
 
   @HiveField(4)
-  final String category;
+  final String type;
 
   @HiveField(5)
-  final String authorId;
+  final String category;
 
   @HiveField(6)
-  final bool isPublic;
+  final String authorId;
 
   @HiveField(7)
+  final bool isPublic;
+
+  @HiveField(8)
   final String teamId;
 
   LogModel({
@@ -35,6 +37,7 @@ class LogModel {
     required this.title,
     required this.description,
     required this.date,
+    required this.type,
     required this.category,
     required this.authorId,
     required this.teamId,
@@ -45,19 +48,14 @@ class LogModel {
   /// FROM MONGODB → OBJECT
   /// =============================
   factory LogModel.fromMap(Map<String, dynamic> map) {
-
     String? parsedId;
 
     if (map['_id'] != null) {
-
       if (map['_id'] is ObjectId) {
         parsedId = map['_id'].toHexString();
-      }
-
-      else if (map['_id'] is String) {
+      } else if (map['_id'] is String) {
         parsedId = map['_id'];
       }
-
     }
 
     return LogModel(
@@ -65,7 +63,8 @@ class LogModel {
       title: map['title'] ?? '',
       description: map['description'] ?? '',
       date: map['date'] ?? '',
-      category: map['category'] ?? 'Pribadi',
+      type: map['type'] ?? 'Pribadi',
+      category: map['category'] ?? 'Mechanical',
       authorId: map['authorId'] ?? 'unknown_user',
       teamId: map['teamId'] ?? 'no_team',
     );
@@ -75,11 +74,11 @@ class LogModel {
   /// OBJECT → MONGODB MAP
   /// =============================
   Map<String, dynamic> toMap() {
-
     final map = <String, dynamic>{
       'title': title,
       'description': description,
       'date': date,
+      'type': type,
       'category': category,
       'authorId': authorId,
       'teamId': teamId,
@@ -91,5 +90,4 @@ class LogModel {
 
     return map;
   }
-
 }

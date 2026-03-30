@@ -1,10 +1,9 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AccessControlService {
-
   // mengambil role dari .env
   static List<String> get availableRoles =>
-      dotenv.env['APP_ROLES']?.split(',') ?? ['Anggota'];
+      dotenv.env['APP_ROLES']?.split(',') ?? ['Ketua'];
 
   static const String actionCreate = 'create';
   static const String actionRead = 'read';
@@ -18,7 +17,6 @@ class AccessControlService {
   };
 
   static bool canPerform(String role, String action, {bool isOwner = false}) {
-
     final permissions = _rolePermissions[role] ?? [];
 
     bool hasBasicPermission = permissions.contains(action);

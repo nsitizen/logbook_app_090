@@ -18,9 +18,8 @@ class _LogEditorPageState extends State<LogEditorPage> {
   late TextEditingController _titleController;
   late TextEditingController _descController;
 
-  String selectedCategory = "Pribadi";
-
-  /// TASK 5 PRIVACY
+  String selectedType = "Pribadi";
+  String selectedCategory = "Mechanical";
   bool isPublic = false;
 
   @override
@@ -28,18 +27,16 @@ class _LogEditorPageState extends State<LogEditorPage> {
     super.initState();
 
     _titleController = TextEditingController(text: widget.log?.title ?? "");
+    _descController =
+        TextEditingController(text: widget.log?.description ?? "");
 
-    _descController = TextEditingController(
-      text: widget.log?.description ?? "",
-    );
-
-    /// set kategori jika edit
+    /// load data saat edit
     if (widget.log != null) {
+      selectedType = widget.log!.type;
       selectedCategory = widget.log!.category;
       isPublic = widget.log!.isPublic;
     }
 
-    /// agar preview update otomatis
     _descController.addListener(() {
       setState(() {});
     });
@@ -51,25 +48,24 @@ class _LogEditorPageState extends State<LogEditorPage> {
     }
 
     if (widget.log == null) {
-
       /// CREATE
       await widget.controller.addLog(
         _titleController.text,
         _descController.text,
-        selectedCategory,
-        "user_001",
+        selectedType,        
+        selectedCategory,   
+        widget.controller.userId,
         "team_001",
         isPublic,
       );
-
     } else {
-
       /// UPDATE
       await widget.controller.updateLog(
         widget.log!,
         _titleController.text,
         _descController.text,
-        selectedCategory,
+        selectedType,      
+        selectedCategory,  
         isPublic,
       );
     }
@@ -92,15 +88,28 @@ class _LogEditorPageState extends State<LogEditorPage> {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return DefaultTabController(
       length: 2,
-
       child: Scaffold(
         appBar: AppBar(
-          title: Text(widget.log == null ? "Catatan Baru" : "Edit Catatan"),
+          title: Text(
+            widget.log == null ? "Catatan Baru" : "Edit Catatan",
+            style: textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
 
-          bottom: const TabBar(
-            tabs: [
+          bottom: TabBar(
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
+            indicatorColor: Colors.white,
+            labelStyle: textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+            tabs: const [
               Tab(text: "Editor"),
               Tab(text: "Pratinjau"),
             ],
@@ -108,7 +117,7 @@ class _LogEditorPageState extends State<LogEditorPage> {
 
           actions: [
             IconButton(
-              icon: const Icon(Icons.save),
+              icon: const Icon(Icons.save, color: Color(0xFFF3E7FF)),
               onPressed: _save,
             )
           ],
@@ -120,21 +129,65 @@ class _LogEditorPageState extends State<LogEditorPage> {
             /// TAB EDITOR
             Padding(
               padding: const EdgeInsets.all(16),
-
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
 
+                  /// TITLE
                   TextField(
                     controller: _titleController,
-                    decoration: const InputDecoration(labelText: "Judul"),
+                    style: textTheme.bodyMedium,
+                    decoration: InputDecoration(
+                      labelText: "Judul",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
                   ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
 
-                  /// DROPDOWN KATEGORI
+                  /// TYPE DROPDOWN
+                  DropdownButtonFormField<String>(
+                    value: selectedType,
+                    decoration: InputDecoration(
+                      labelText: "Jenis Catatan",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    items: const [
+                      DropdownMenuItem(
+                        value: "Pribadi",
+                        child: Text("Pribadi"),
+                      ),
+                      DropdownMenuItem(
+                        value: "Pekerjaan",
+                        child: Text("Pekerjaan"),
+                      ),
+                      DropdownMenuItem(
+                        value: "Urgent",
+                        child: Text("Urgent"),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        selectedType = value!;
+                      });
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  /// CATEGORY DROPDOWN
                   DropdownButtonFormField<String>(
                     value: selectedCategory,
-                    decoration: const InputDecoration(labelText: "Kategori"),
+                    decoration: InputDecoration(
+                      labelText: "Kategori Proyek",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
                     items: const [
                       DropdownMenuItem(
                         value: "Mechanical",
@@ -156,13 +209,20 @@ class _LogEditorPageState extends State<LogEditorPage> {
                     },
                   ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
 
-                  /// PRIVACY SWITCH (TASK 5)
+                  /// PRIVACY
                   SwitchListTile(
-                    title: const Text("Public"),
-                    subtitle: const Text(
-                        "Jika aktif, anggota tim dapat melihat catatan ini"),
+                    title: Text(
+                      "Public",
+                      style: textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    subtitle: Text(
+                      "Jika aktif, anggota tim dapat melihat catatan ini",
+                      style: textTheme.bodySmall,
+                    ),
                     value: isPublic,
                     onChanged: (value) {
                       setState(() {
@@ -171,17 +231,26 @@ class _LogEditorPageState extends State<LogEditorPage> {
                     },
                   ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
 
+                  /// DESCRIPTION
                   Expanded(
-                    child: TextField(
-                      controller: _descController,
-                      maxLines: null,
-                      expands: true,
-                      keyboardType: TextInputType.multiline,
-                      decoration: const InputDecoration(
-                        hintText: "Tulis laporan dengan Markdown...",
-                        border: InputBorder.none,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: TextField(
+                        controller: _descController,
+                        style: textTheme.bodyMedium,
+                        maxLines: null,
+                        expands: true,
+                        keyboardType: TextInputType.multiline,
+                        decoration: InputDecoration(
+                          hintText: "Tulis laporan dengan Markdown...",
+                          border: InputBorder.none,
+                        ),
                       ),
                     ),
                   ),
@@ -189,9 +258,18 @@ class _LogEditorPageState extends State<LogEditorPage> {
               ),
             ),
 
-            /// TAB PREVIEW MARKDOWN
-            Markdown(
-              data: _descController.text,
+            /// TAB PREVIEW
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Markdown(
+                data: _descController.text,
+                styleSheet:
+                    MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
+                  p: textTheme.bodyMedium,
+                  h1: textTheme.titleLarge,
+                  h2: textTheme.titleMedium,
+                ),
+              ),
             ),
           ],
         ),
