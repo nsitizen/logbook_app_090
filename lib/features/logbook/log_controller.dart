@@ -8,8 +8,9 @@ import '../../services/mongo_service.dart';
 import '../../helpers/log_helper.dart';
 
 class LogController {
-  final MongoService _mongoService = MongoService();
-  final Connectivity _connectivity = Connectivity();
+  late final MongoService _mongoService;
+  late final hive.Box<LogModel> _logBox;
+  late final Connectivity _connectivity;
 
   /// DATA STATE
   final ValueNotifier<List<LogModel>> logsNotifier =
@@ -27,11 +28,17 @@ class LogController {
   final ValueNotifier<bool> isOnline = ValueNotifier(false);
   final ValueNotifier<bool> isSyncing = ValueNotifier(false);
 
-  final hive.Box<LogModel> _logBox = hive.Hive.box<LogModel>('offline_logs');
-
   String userId = "";
 
-  LogController() {
+  LogController({
+    MongoService? mongoService, 
+    hive.Box<LogModel>? logBox,
+    Connectivity? connectivity, 
+  }) {
+    _mongoService = mongoService ?? MongoService();
+    _logBox = logBox ?? hive.Hive.box<LogModel>('offline_logs');
+    _connectivity = connectivity ?? Connectivity(); // Inject atau gunakan asli
+    
     _checkInitialConnection();
     startConnectivityListener();
   }
