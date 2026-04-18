@@ -4,6 +4,7 @@ import 'log_controller.dart';
 import 'models/log_model.dart';
 import 'package:intl/intl.dart';
 import 'log_editor_page.dart';
+import 'package:logbook_app_090/features/vision/vision_view.dart';
 
 class LogView extends StatefulWidget {
   final String username;
@@ -554,17 +555,39 @@ class _LogViewState extends State<LogView> {
             return passPrivacy && passCategory;
           }).toList();
 
-          final isSearching = _searchController.text.isNotEmpty;
-
           if (displayLogs.isEmpty) {
             return const SizedBox(); 
           }
 
           /// Tampilkan kalau ada data
-          return FloatingActionButton(
-            backgroundColor: Colors.deepPurpleAccent,
-            onPressed: () => _goToEditor(),
-            child: const Icon(Icons.add),
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              // 1. Tombol Kamera Baru (Vision)
+              FloatingActionButton(
+                heroTag: "btn_vision", // heroTag wajib diisi jika ada >1 FAB di satu halaman
+                backgroundColor: Colors.orangeAccent, 
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const VisionView(),
+                    ),
+                  );
+                },
+                child: const Icon(Icons.camera_alt),
+              ),
+              
+              const SizedBox(height: 16), // Jarak antar tombol
+              
+              // 2. Tombol Tambah Catatan yang Lama
+              FloatingActionButton(
+                heroTag: "btn_add_log",
+                backgroundColor: Colors.deepPurpleAccent,
+                onPressed: () => _goToEditor(),
+                child: const Icon(Icons.add),
+              ),
+            ],
           );
         },
       ),

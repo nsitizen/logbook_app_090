@@ -1,3 +1,4 @@
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'services/mongo_service.dart';
@@ -6,8 +7,16 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'features/logbook/models/log_model.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+List<CameraDescription> cameras = [];
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    cameras = await availableCameras(); 
+  } on CameraException catch (e) {
+    print('Error: ${e.code}\nError Message: ${e.description}');
+  }
 
   await dotenv.load(fileName: ".env");
 
