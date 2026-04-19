@@ -10,13 +10,13 @@ class VisionController extends ChangeNotifier with WidgetsBindingObserver {
   String? errorMessage;
 
   Timer? mockTimer;
-  double mockX = 0.5; 
-  double mockY = 0.5; 
+  double mockX = 0.5;
+  double mockY = 0.5;
   final Random _random = Random();
 
   bool isFlashOn = false;
   bool isOverlayActive = true;
-  String mockLabel = "D40"; 
+  String mockLabel = "D40";
 
   VisionController() {
     WidgetsBinding.instance.addObserver(this);
@@ -52,14 +52,14 @@ class VisionController extends ChangeNotifier with WidgetsBindingObserver {
     mockTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
       mockX = 0.2 + _random.nextDouble() * 0.6;
       mockY = 0.2 + _random.nextDouble() * 0.6;
-      mockLabel = _random.nextBool() ? "D40" : "D00"; 
-      notifyListeners(); 
+      mockLabel = _random.nextBool() ? "D40" : "D00";
+      notifyListeners();
     });
   }
 
   Future<void> toggleFlash() async {
     if (controller == null || !controller!.value.isInitialized) return;
-    
+
     isFlashOn = !isFlashOn;
     await controller!.setFlashMode(isFlashOn ? FlashMode.torch : FlashMode.off);
     notifyListeners();
@@ -68,6 +68,21 @@ class VisionController extends ChangeNotifier with WidgetsBindingObserver {
   void toggleOverlay() {
     isOverlayActive = !isOverlayActive;
     notifyListeners();
+  }
+
+  Future<XFile?> takePhoto() async {
+    if (controller == null || !controller!.value.isInitialized) {
+      return null;
+    }
+    try {
+      // Ambil gambar
+      final image = await controller!.takePicture();
+      return image;
+    } catch (e) {
+      errorMessage = "Gagal mengambil foto: $e";
+      notifyListeners();
+      return null;
+    }
   }
 
   @override
@@ -79,7 +94,7 @@ class VisionController extends ChangeNotifier with WidgetsBindingObserver {
     }
 
     if (state == AppLifecycleState.inactive) {
-      mockTimer?.cancel();
+      isFlashOn = false;
       cameraController.dispose();
       isInitialized = false;
       notifyListeners();

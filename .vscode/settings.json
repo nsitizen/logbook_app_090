@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "D:/dev/logbook_app_090/linux"
+    "cmake.sourceDirectory": "D:/dev/logbook_app_090/linux",
+    "java.configuration.updateBuildConfiguration": "interactive"
 }

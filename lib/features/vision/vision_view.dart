@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'vision_controller.dart';
 import 'damage_painter.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'image_editor_view.dart';
 
 class VisionView extends StatefulWidget {
   const VisionView({super.key});
@@ -99,6 +100,42 @@ class _VisionViewState extends State<VisionView> {
             ],
           ),
           body: _buildBody(),
+
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.centerFloat,
+
+          floatingActionButton: FloatingActionButton.extended(
+            backgroundColor: Colors.deepPurpleAccent,
+            tooltip: 'Ambil Foto & Analisis',
+            onPressed: () async {
+              // 1. Ambil foto menggunakan controller
+              final image = await _visionController.takePhoto();
+
+              if (_visionController.isFlashOn) {
+                await _visionController.toggleFlash();
+              }
+
+              // 2. Jika berhasil, pindah ke halaman ImageEditorView
+              if (image != null && context.mounted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        ImageEditorView(imagePath: image.path),
+                  ),
+                );
+              }
+            },
+            icon: const Icon(Icons.camera_alt, color: Colors.white),
+            label: const Text(
+              "Tangkap Gambar",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2, // Sedikit spasi antar huruf biar elegan
+              ),
+            ),
+          ),
         );
       },
     );

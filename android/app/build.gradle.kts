@@ -8,7 +8,6 @@ plugins {
 android {
     namespace = "com.example.logbook_app_090"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

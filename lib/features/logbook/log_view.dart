@@ -5,6 +5,7 @@ import 'models/log_model.dart';
 import 'package:intl/intl.dart';
 import 'log_editor_page.dart';
 import 'package:logbook_app_090/features/vision/vision_view.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 
 class LogView extends StatefulWidget {
   final String username;
@@ -16,7 +17,6 @@ class LogView extends StatefulWidget {
 }
 
 class _LogViewState extends State<LogView> {
-
   final LogController _controller = LogController();
   final TextEditingController _searchController = TextEditingController();
   String _selectedCategory = "All";
@@ -113,9 +113,7 @@ class _LogViewState extends State<LogView> {
 
       appBar: AppBar(
         backgroundColor: Colors.deepPurpleAccent,
-        title: Text(
-          "Logbook: ${widget.username}",
-        ),
+        title: Text("Logbook: ${widget.username}"),
         actions: [
           ValueListenableBuilder<bool>(
             valueListenable: _controller.isSyncing,
@@ -217,9 +215,9 @@ class _LogViewState extends State<LogView> {
 
                 Text(
                   "Catat aktivitas harianmu hari ini ✨",
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.white70,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
                 ),
               ],
             ),
@@ -276,7 +274,6 @@ class _LogViewState extends State<LogView> {
             child: ValueListenableBuilder<List<LogModel>>(
               valueListenable: _controller.filteredLogs,
               builder: (context, logs, _) {
-
                 /// PRIVACY FILTER
                 final displayLogs = logs.where((log) {
                   final isOwner = log.authorId == _controller.userId;
@@ -294,13 +291,11 @@ class _LogViewState extends State<LogView> {
 
                 if (displayLogs.isEmpty) {
                   if (isSearching) {
-
                     /// EMPTY SEARCH RESULT
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-
                           Icon(
                             Icons.auto_stories,
                             size: 80,
@@ -311,21 +306,18 @@ class _LogViewState extends State<LogView> {
 
                           Text(
                             "Tidak ada catatan yang anda cari.",
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
                     );
                   } else {
-
                     /// NO DATA AT ALL
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-
                           Icon(
                             Icons.auto_stories,
                             size: 80,
@@ -336,18 +328,16 @@ class _LogViewState extends State<LogView> {
 
                           Text(
                             "Belum ada aktivitas hari ini",
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
 
                           const SizedBox(height: 8),
 
                           Text(
                             "Mulai catat aktivitas Anda!",
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.black54,
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: Colors.black54),
                           ),
                           const SizedBox(height: 20),
 
@@ -355,7 +345,7 @@ class _LogViewState extends State<LogView> {
                             onPressed: () => _goToEditor(),
                             icon: const Icon(Icons.add),
                             label: const Text("Tambah Catatan"),
-                          )
+                          ),
                         ],
                       ),
                     );
@@ -446,9 +436,8 @@ class _LogViewState extends State<LogView> {
                               log.title,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
 
                             subtitle: Column(
@@ -468,7 +457,9 @@ class _LogViewState extends State<LogView> {
                                 Chip(
                                   label: Text(
                                     log.category,
-                                    style: Theme.of(context).textTheme.bodySmall,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   backgroundColor: Colors.white,
@@ -483,9 +474,8 @@ class _LogViewState extends State<LogView> {
                                 /// DATE
                                 Text(
                                   _formatDate(log.date),
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Colors.black54,
-                                  ),
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(color: Colors.black54),
                                 ),
                               ],
                             ),
@@ -543,11 +533,10 @@ class _LogViewState extends State<LogView> {
       floatingActionButton: ValueListenableBuilder<List<LogModel>>(
         valueListenable: _controller.filteredLogs,
         builder: (context, logs, _) {
-          final displayLogs = logs.where((log) {
+          // Bagian filter biarkan saja kalau memang dipakai untuk hal lain di atasnya
+          logs.where((log) {
             final isOwner = log.authorId == _controller.userId;
-
             final passPrivacy = isOwner || log.isPublic == true;
-
             final passCategory = _selectedCategory == "All"
                 ? true
                 : log.category == _selectedCategory;
@@ -555,37 +544,53 @@ class _LogViewState extends State<LogView> {
             return passPrivacy && passCategory;
           }).toList();
 
-          if (displayLogs.isEmpty) {
-            return const SizedBox(); 
-          }
+          // KITA HAPUS if (displayLogs.isEmpty) return SizedBox();
+          // Agar tombol selalu bisa diakses meskipun data kosong
 
-          /// Tampilkan kalau ada data
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.end,
+          /// Tampilkan SpeedDial sebagai ganti Column
+          return SpeedDial(
+            icon: Icons.menu, // Ikon saat tertutup (bisa diganti Icons.add)
+            activeIcon: Icons.close, // Ikon saat terbuka (X)
+            backgroundColor: Colors.deepPurpleAccent,
+            foregroundColor: Colors.white,
+
+            // Efek background meredup
+            overlayColor: Colors.black,
+            overlayOpacity: 0.5,
+
+            // Animasi membal
+            curve: Curves.bounceIn,
+            spacing: 12,
+            spaceBetweenChildren: 12,
+
             children: [
-              // 1. Tombol Kamera Baru (Vision)
-              FloatingActionButton(
-                heroTag: "btn_vision", // heroTag wajib diisi jika ada >1 FAB di satu halaman
-                backgroundColor: Colors.orangeAccent, 
-                onPressed: () {
+              // 1. TOMBOL KAMERA
+              SpeedDialChild(
+                child: const Icon(Icons.camera_alt, color: Colors.white),
+                backgroundColor: Colors.deepPurpleAccent,
+                label: 'Buka Kamera PCD',
+                labelStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurpleAccent,
+                ),
+                onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => const VisionView(),
-                    ),
+                    MaterialPageRoute(builder: (context) => const VisionView()),
                   );
                 },
-                child: const Icon(Icons.camera_alt),
               ),
-              
-              const SizedBox(height: 16), // Jarak antar tombol
-              
-              // 2. Tombol Tambah Catatan yang Lama
-              FloatingActionButton(
-                heroTag: "btn_add_log",
-                backgroundColor: Colors.deepPurpleAccent,
-                onPressed: () => _goToEditor(),
-                child: const Icon(Icons.add),
+
+              // 2. TOMBOL TAMBAH CATATAN
+              SpeedDialChild(
+                child: const Icon(Icons.edit_document, color: Colors.white),
+                backgroundColor: Colors.deepPurple,
+                label: 'Tambah Catatan Logbook',
+                labelStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple,
+                ),
+                onTap: () => _goToEditor(), // Memanggil fungsi bawaanmu
               ),
             ],
           );
