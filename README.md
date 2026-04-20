@@ -3,7 +3,7 @@
 Aplikasi *mobile* berbasis Flutter yang dirancang untuk membantu petugas patroli dalam mendeteksi, mendokumentasikan, dan menganalisis kerusakan jalan (aspal). Aplikasi ini dilengkapi dengan modul **Pengolahan Citra Digital (PCD)** yang dibangun murni menggunakan fungsi dasar bahasa Dart, tanpa bergantung pada *library* eksternal C++ seperti OpenCV.
 
 # Demo Aplikasi
-![Demo Aplikasi](assets\gif\Demo_PCD.mp4)
+![Demo Aplikasi](assets\gif\Demo_PCD.gif)
 
 ## ✨ Fitur Utama
 
